@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Base templates: Anyone can read
+    match /checklists/{checklist} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // User lists: Only the owner can read/write
+    match /user_checklists/{list} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}

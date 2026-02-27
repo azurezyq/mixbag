@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mixbag | 智能清单</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="solar-theme">
+    <div id="app">
+        <header>
+            <div class="logo">
+                <i data-lucide="package-check" class="accent-icon"></i>
+                <h1>Mixbag</h1>
+            </div>
+            <div id="user-controls">
+                <button id="settings-btn" class="icon-btn" title="设置"><i data-lucide="settings"></i></button>
+                <button id="login-btn" class="glow-btn"><i data-lucide="log-in"></i> 登录</button>
+                <div id="user-profile" class="hidden">
+                    <img id="user-photo" src="" alt="">
+                    <span id="user-name"></span>
+                    <button id="logout-btn" class="icon-btn" title="退出"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </header>
+        <main>
+            <section id="list-view">
+                <div class="list-toolbar">
+                    <div class="search-bar">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="list-search" placeholder="搜索清单或标签...">
+                    </div>
+                    <button class="icon-btn" id="filter-starred" title="星标"><i data-lucide="star"></i></button>
+                    <button class="icon-btn" id="create-list-btn" title="新建清单"><i data-lucide="plus"></i></button>
+                </div>
+                <div id="tag-bar" class="tag-bar"></div>
+                <div id="checklist-list"></div>
+            </section>
+            <section id="right-panel">
+                <div id="content">
+                    <div id="empty-state">
+                        <i data-lucide="layout-grid" class="large-icon"></i>
+                        <p>选择一个清单开始。</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <!-- Category move modal -->
+    <div id="category-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>移动到分类</h3>
+            <div id="category-options"></div>
+            <div class="modal-input-row">
+                <input type="text" id="new-category-input" placeholder="或输入新分类…">
+                <button id="new-category-confirm" class="icon-btn"><i data-lucide="plus"></i></button>
+            </div>
+            <button id="category-modal-cancel" class="secondary full-w">取消</button>
+        </div>
+    </div>
+    <!-- Create list modal -->
+    <div id="create-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>新建清单</h3>
+            <input type="text" id="create-name-input" class="modal-full-input" placeholder="清单名称">
+            <input type="text" id="create-tags-input" class="modal-full-input" placeholder="标签（逗号分隔，如：户外,夏季）">
+            <div class="modal-actions">
+                <button id="create-cancel" class="secondary">取消</button>
+                <button id="create-confirm">创建</button>
+            </div>
+        </div>
+    </div>
+    <!-- AI Chat -->
+    <button id="chat-fab"><i data-lucide="bot"></i></button>
+    <div id="chat-panel" class="hidden">
+        <div class="chat-header">
+            <i data-lucide="bot"></i>
+            <span>AI 助手</span>
+            <button class="icon-btn" id="chat-close"><i data-lucide="x"></i></button>
+        </div>
+        <div id="chat-messages">
+            <div class="chat-msg bot"><span>你好！我是 Mixbag AI 助手 ✨<br><br>试试说：<br>• 「帮我创建一个露营装备清单」<br>• 「把防晒霜加到夏季徒步里」<br>•
+                    「给购物清单加10个水果」</span></div>
+        </div>
+        <div class="chat-input-bar">
+            <input type="text" id="chat-input" placeholder="输入消息…">
+            <button id="chat-send"><i data-lucide="send"></i></button>
+        </div>
+    </div>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
