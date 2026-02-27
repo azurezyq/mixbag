@@ -24,10 +24,43 @@ Don't reinvent the wheel every time you pack or plan. Define your base sets once
 - **Platform**: Google Firebase (Firestore, Auth, Firebase Admin SDK).
 - **Backend API**: Python (Flask).
 - **Frontend**: HTML5, Vanilla CSS, JS (Premium UI).
-- **AI**: Integrated with Vertex AI for intelligent list manipulation.
+- **AI**: Integrated with Vertex AI (Gemini 2.5 Flash) for intelligent list manipulation.
 
-## 📅 Architecture Overview
-Mixbag uses a flat but powerful Firestore schema to allow for rapid merging of lists while maintaining a history of your base templates.
+## ⚙️ Setup & Deployment
+
+### 1. Environment Configuration
+Copy the example environment file and fill in your credentials:
+```bash
+cp .env.example .env
+```
+Ensure you have:
+- A Google Cloud Service Account JSON key for Firebase Admin access (set `GOOGLE_APPLICATION_CREDENTIALS`).
+- Your Firebase Client Config fields (`FB_API_KEY`, etc.) which are now injected dynamically to avoid commitment to Git.
+
+### 2. Install Dependencies
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Seed Firestore (Optional)
+To populate your Firestore with base templates:
+```bash
+python seed_firestore.py
+```
+
+### 4. Run Locally
+```bash
+python app.py
+```
+
+### 5. Deployment
+The project is configured for Cloud Run and Firebase Hosting.
+```bash
+gcloud run deploy mixbag-service --source .
+firebase deploy --only hosting
+```
 
 ---
 *Created by Antigravity AI*

@@ -2,14 +2,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAeCZJAWyy1jN4wFqhRLrA8vd327etHkf4", authDomain: "zhouyunqing-001.firebaseapp.com",
-    projectId: "zhouyunqing-001", storageBucket: "zhouyunqing-001.firebasestorage.app",
-    messagingSenderId: "485677859034", appId: "1:485677859034:web:eb575ad3990ec133c1a5e3"
-};
+const firebaseConfig = window.FIREBASE_CONFIG || {};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app, "fairy");
+const db = getFirestore(app, firebaseConfig.databaseId || "fairy");
 const provider = new GoogleAuthProvider();
 
 document.addEventListener('DOMContentLoaded', () => {

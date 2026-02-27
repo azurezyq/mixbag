@@ -4,6 +4,9 @@ from firebase_config import db, auth_client
 import vertexai
 from vertexai.generative_models import GenerativeModel
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-key-for-mixbag")
@@ -11,9 +14,9 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-key-for-mixbag")
 # Initialize Vertex AI
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 vertexai.init(project=PROJECT_ID, location="us-central1")
-suggest_model = GenerativeModel("gemini-flash-latest")
+suggest_model = GenerativeModel("gemini-2.5-flash")
 chat_model = GenerativeModel(
-    "gemini-flash-latest",
+    "gemini-2.5-flash",
     system_instruction="""你是 Mixbag 智能清单助手。用户可以通过自然语言让你操作他们的清单。
 
 你必须返回一个 JSON 对象，格式如下：
@@ -47,7 +50,16 @@ chat_model = GenerativeModel(
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    fb_config = {
+        "apiKey": os.environ.get("FB_API_KEY", ""),
+        "authDomain": os.environ.get("FB_AUTH_DOMAIN", ""),
+        "projectId": os.environ.get("FB_PROJECT_ID", ""),
+        "storageBucket": os.environ.get("FB_STORAGE_BUCKET", ""),
+        "messagingSenderId": os.environ.get("FB_MESSAGING_SENDER_ID", ""),
+        "appId": os.environ.get("FB_APP_ID", ""),
+        "databaseId": os.environ.get("FIREBASE_DATABASE_ID", "fairy")
+    }
+    return render_template('index.html', firebase_config=fb_config)
 
 @app.route('/api/checklists', methods=['GET'])
 def get_checklists():
