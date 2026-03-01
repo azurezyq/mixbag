@@ -360,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const render = () => {
             const g = groupItems(bag.items);
             contentView.innerHTML = `
+                <div class="checklist-container ${isEditMode ? '' : 'check-mode'}">
                 <div class="view-header">
                     <button class="icon-btn" id="back-btn"><i data-lucide="arrow-left"></i></button>
                     <h2 id="bag-title" title="点击重命名">${bag.name}</h2>
@@ -370,7 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="icon-btn dup-btn" id="dup-detail" title="复制"><i data-lucide="copy"></i></button>
                     </div>
                 </div>
-                <div class="${isEditMode ? '' : 'check-mode'}">
                 <div class="progress-bar-container"><div id="progress-bar" class="progress-bar"></div></div>
                 <div class="tag-manage">${(bag.tags || []).map(t => `<span class="badge">${t}<span class="remove-tag" data-tag="${t}">×</span></span>`).join('')}</div>
                 <div class="tag-add-row"><input id="tag-input" placeholder="添加标签…"><button class="icon-btn" id="tag-add-btn"><i data-lucide="plus"></i></button></div>
