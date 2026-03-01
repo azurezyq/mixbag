@@ -1129,6 +1129,8 @@ button.full-w {
     right: 24px;
     width: 320px;
     height: 480px;
+    min-width: 280px;
+    min-height: 300px;
     max-height: calc(100vh - 120px);
     background: var(--card);
     border-radius: 20px;
@@ -1138,6 +1140,25 @@ button.full-w {
     z-index: 400;
     border: 1px solid var(--border);
     overflow: hidden;
+}
+
+#chat-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nw-resize;
+    z-index: 450;
+    border-top: 2px solid var(--accent);
+    border-left: 2px solid var(--accent);
+    border-top-left-radius: 4px;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+#chat-resize-handle:hover {
+    opacity: 1;
 }
 
 @media(max-width: 767px) {

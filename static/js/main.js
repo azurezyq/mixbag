@@ -19,13 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryModal = $('category-modal'), categoryOptions = $('category-options'),
         createModal = $('create-modal');
 
-    let currentUser = null, baseBags = [], userBags = [], selectedBags = new Set(),
+    let currentUser = null, userBags = [], selectedBags = new Set(),
         showOnlyStarred = false, selectedTag = null, searchQuery = '';
     let movingBag = null, movingItem = null, movingCallback = null;
     let currentOpenBagName = null;
 
     // Settings (stored in localStorage)
-    let settings = JSON.parse(localStorage.getItem('mixbag_settings') || '{"showTemplates":true}');
+    let settings = JSON.parse(localStorage.getItem('mixbag_settings') || '{}');
 
     const isMobile = () => window.innerWidth < 768;
 
@@ -44,8 +44,37 @@ document.addEventListener('DOMContentLoaded', () => {
     filterStarredBtn.onclick = () => { showOnlyStarred = !showOnlyStarred; filterStarredBtn.classList.toggle('active', showOnlyStarred); renderBags(); };
     listSearch.oninput = e => { searchQuery = e.target.value.toLowerCase(); renderBags(); };
 
-    onAuthStateChanged(auth, user => {
-        if (user) { currentUser = user; userProfile.classList.remove('hidden'); loginBtn.classList.add('hidden'); userName.textContent = user.displayName; userPhoto.src = user.photoURL; loadUserBags(); }
+    onAuthStateChanged(auth, async user => {
+        if (user) {
+            currentUser = user;
+            userProfile.classList.remove('hidden');
+            loginBtn.classList.add('hidden');
+            userName.textContent = user.displayName;
+            userPhoto.src = user.photoURL;
+            await loadUserBags();
+            // Onboarding check: if user has no bags, populate from templates
+            setTimeout(async () => {
+                if (userBags.length === 0 && !localStorage.getItem(`onboarded_${user.uid}`)) {
+                    console.log("New user onboarding...");
+                    try {
+                        const s = await getDocs(collection(db, 'checklists'));
+                        const templates = s.docs.map(d => d.data());
+                        for (const tpl of templates) {
+                            await addDoc(collection(db, 'user_checklists'), {
+                                userId: user.uid,
+                                name: tpl.name,
+                                items: tpl.items || [],
+                                checkedItems: [],
+                                isStarred: false,
+                                tags: tpl.tags || [],
+                                createdAt: serverTimestamp()
+                            });
+                        }
+                        localStorage.setItem(`onboarded_${user.uid}`, 'true');
+                    } catch (e) { console.error("Onboarding failed", e); }
+                }
+            }, 1000); // Give a moment for snapshot to fire
+        }
         else { currentUser = null; userProfile.classList.add('hidden'); loginBtn.classList.remove('hidden'); userBags = []; renderBags(); }
     });
 
@@ -58,19 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2>设置</h2><div></div>
             </div>
             <div class="settings-body">
-                <div class="setting-group"><h3>显示</h3>
-                    <label class="setting-row"><span>显示系统模板</span>
-                        <input type="checkbox" id="st-toggle" ${settings.showTemplates ? 'checked' : ''}>
-                        <span class="toggle"></span>
-                    </label>
-                </div>
                 <div class="setting-group"><h3>关于</h3>
-                    <div class="setting-row"><span>版本</span><span class="dim">1.7.0</span></div>
+                    <div class="setting-row"><span>版本</span><span class="dim">1.8.0</span></div>
                 </div>
             </div>`;
         lucide.createIcons();
         $('back-btn').onclick = goBack;
-        $('st-toggle').onchange = () => { settings.showTemplates = $('st-toggle').checked; localStorage.setItem('mixbag_settings', JSON.stringify(settings)); renderBags(); };
     };
 
     // ===== CREATE NEW LIST =====
@@ -100,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTagBar() {
         tagBar.innerHTML = '';
         const allTags = new Set();
-        [...baseBags, ...userBags].forEach(b => (b.tags || []).forEach(t => allTags.add(t)));
+        userBags.forEach(b => (b.tags || []).forEach(t => allTags.add(t)));
         [['全部', null], ...Array.from(allTags).map(t => [t, t])].forEach(([label, tag]) => {
             const el = document.createElement('div');
             el.className = `tag-pill ${selectedTag === tag ? 'active' : ''}`;
@@ -113,10 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== BAG LIST =====
     function renderBags() {
         checklistList.innerHTML = '';
-        let allBags = [...baseBags, ...userBags];
-        if (!settings.showTemplates) allBags = allBags.filter(b => !baseBags.some(bb => bb.id === b.id));
-        const seen = new Set();
-        allBags = allBags.filter(b => { if (seen.has(b.id)) return false; seen.add(b.id); return true; });
+        let allBags = [...userBags];
         if (showOnlyStarred) allBags = allBags.filter(b => b.isStarred);
         if (selectedTag) allBags = allBags.filter(b => (b.tags || []).includes(selectedTag));
         if (searchQuery) allBags = allBags.filter(b => b.name.toLowerCase().includes(searchQuery) || (b.tags || []).some(t => t.toLowerCase().includes(searchQuery)));
@@ -124,26 +143,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!allBags.length) { checklistList.innerHTML = `<p class="empty-msg">${showOnlyStarred ? '没有星标清单' : '没有发现清单'}</p>`; return; }
 
         allBags.forEach(bag => {
-            const isTpl = baseBags.some(b => b.id === bag.id);
-            const isUser = userBags.some(b => b.id === bag.id);
             const el = document.createElement('div');
             el.className = `bag-item ${selectedBags.has(bag.id) ? 'selected' : ''}`;
             el.innerHTML = `
                 <div class="bag-info">
-                    <i data-lucide="${isTpl ? 'layers' : 'package'}"></i>
+                    <i data-lucide="package"></i>
                     <div class="bag-text">
                         <span>${bag.name}</span>
                         <div class="bag-tags">
-                            ${isTpl ? '<span class="badge template-badge">模板</span>' : ''}
                             ${(bag.tags || []).map(t => `<span class="badge ${selectedTag === t ? 'highlight' : ''}">${t}</span>`).join('')}
                         </div>
                     </div>
                 </div>
                 <div class="bag-controls">
-                    ${isUser ? `<button class="priority-btn" title="置顶">置顶</button>` : ``}
+                    <button class="priority-btn" title="置顶">置顶</button>
                     <button class="icon-btn dup-btn" title="复制"><i data-lucide="copy"></i></button>
                     <button class="icon-btn star-btn ${bag.isStarred ? 'starred' : ''}" title="收藏"><i data-lucide="star"></i></button>
-                    ${isUser ? `<button class="icon-btn delete-bag-btn" title="删除"><i data-lucide="trash-2"></i></button>` : ``}
+                    <button class="icon-btn delete-bag-btn" title="删除"><i data-lucide="trash-2"></i></button>
                     <input type="checkbox" ${selectedBags.has(bag.id) ? 'checked' : ''}>
                 </div>`;
             el.onclick = async e => {
@@ -241,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== MIXER =====
     function startMixing() {
-        const sel = [...baseBags, ...userBags].filter(b => selectedBags.has(b.id));
+        const sel = userBags.filter(b => selectedBags.has(b.id));
         const map = new Map();
         sel.flatMap(b => b.items).forEach(it => { const n = typeof it === 'string' ? it : it.name; const c = typeof it === 'string' ? '未分类' : it.category; if (!map.has(n)) map.set(n, c); });
         const items = Array.from(map.entries()).map(([n, c]) => ({ name: n, category: c }));
@@ -304,8 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== RENAME =====
     function startRename(bag, renderCb) {
-        const isUser = userBags.some(b => b.id === bag.id);
-        if (!isUser) { alert('只能重命名自己创建的清单'); return; }
         const h2 = $('bag-title');
         if (!h2) return;
         const input = document.createElement('input');
@@ -332,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function openChecklist(bag) {
         currentOpenBagName = bag.name;
         showRightPanel();
-        const isUser = () => userBags.some(b => b.id === bag.id);
 
         const render = () => {
             const g = groupItems(bag.items);
@@ -379,14 +392,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.remove-tag').forEach(el => {
                 el.onclick = async e => {
                     e.stopPropagation(); bag.tags = (bag.tags || []).filter(t => t !== el.dataset.tag);
-                    if (isUser() && currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { tags: bag.tags });
+                    if (currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { tags: bag.tags });
                     render(); renderTagBar(); renderBags();
                 };
             });
             $('tag-add-btn').onclick = async () => {
                 const v = $('tag-input').value.trim(); if (!v) return;
                 if (!bag.tags) bag.tags = []; if (!bag.tags.includes(v)) bag.tags.push(v);
-                if (isUser() && currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { tags: bag.tags });
+                if (currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { tags: bag.tags });
                 render(); renderTagBar(); renderBags();
             };
             $('tag-input').onkeypress = e => { if (e.key === 'Enter') $('tag-add-btn').click(); };
@@ -406,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.stopPropagation(); const cat = btn.dataset.cat; const inp = btn.previousElementSibling; const v = inp.value.trim(); if (!v) return;
                     if (!bag.items.some(i => (typeof i === 'string' ? i : i.name) === v)) {
                         bag.items.push({ name: v, category: cat });
-                        if (isUser() && currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { items: bag.items });
+                        if (currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { items: bag.items });
                         render(); renderBags();
                     }
                 };
@@ -446,8 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideActionCenter() { const ac = $('action-center'); if (ac) ac.remove(); }
 
     async function loadBags() {
-        try { const s = await getDocs(collection(db, 'checklists')); baseBags = s.docs.map(d => ({ id: d.id, ...d.data() })); }
-        catch { const r = await fetch('/static/mock_data.json'); baseBags = (await r.json()).map((d, i) => ({ id: `mock_${i}`, ...d })); }
         renderBags(); renderTagBar();
     }
 
@@ -464,6 +475,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chatFab.onclick = () => { chatPanel.classList.remove('hidden'); chatInput.focus(); };
     chatClose.onclick = () => chatPanel.classList.add('hidden');
+
+    // Resizable Chat Panel
+    const resizeHandle = $('chat-resize-handle');
+    let isResizing = false;
+    let startX, startY, startW, startH;
+
+    resizeHandle.onmousedown = e => {
+        if (isMobile()) return;
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startW = chatPanel.offsetWidth;
+        startH = chatPanel.offsetHeight;
+        document.body.style.cursor = 'nw-resize';
+        e.preventDefault();
+    };
+
+    window.addEventListener('mousemove', e => {
+        if (!isResizing) return;
+        const dw = startX - e.clientX;
+        const dh = startY - e.clientY;
+        const newW = Math.max(280, startW + dw);
+        const newH = Math.max(300, startH + dh);
+        chatPanel.style.width = newW + 'px';
+        chatPanel.style.height = newH + 'px';
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+        }
+    });
+
+    resizeHandle.addEventListener('touchstart', e => {
+        if (isMobile()) return;
+        isResizing = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startW = chatPanel.offsetWidth;
+        startH = chatPanel.offsetHeight;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', e => {
+        if (!isResizing) return;
+        const dw = startX - e.touches[0].clientX;
+        const dh = startY - e.touches[0].clientY;
+        const newW = Math.max(280, startW + dw);
+        const newH = Math.max(300, startH + dh);
+        chatPanel.style.width = newW + 'px';
+        chatPanel.style.height = newH + 'px';
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => { isResizing = false; });
 
     function addChatMsg(text, isUser = false) {
         const el = document.createElement('div');
@@ -581,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (b) { await deleteDoc(doc(db, "user_checklists", b.id)); if (currentOpenBagName === b.name) goBack(); addChatMsg(`✨ 已删除 "${b.name}"`, false); }
             }
             else if (act.type === 'duplicate_list') {
-                const b = getBag(act.list_name) || baseBags.find(x => x.name === act.list_name);
+                const b = getBag(act.list_name);
                 if (b) {
                     await addDoc(collection(db, 'user_checklists'), { userId: currentUser.uid, name: act.new_name, items: [...b.items], checkedItems: [], isStarred: false, tags: [...(b.tags || [])], createdAt: serverTimestamp() });
                     addChatMsg(`✨ 已复制清单 "${act.new_name}"`, false);
@@ -604,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             else if (act.type === 'open_list') {
-                const b = getBag(act.list_name) || baseBags.find(x => x.name === act.list_name);
+                const b = getBag(act.list_name);
                 if (b) {
                     if (isMobile()) chatPanel.classList.add('hidden');
                     openChecklist(b);
