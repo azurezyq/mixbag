@@ -1304,6 +1304,7 @@ button.full-w {
         max-width: 150px;
     }
 }
+
 /* CHECK MODE STYLES */
 .check-mode .tag-add-row,
 .check-mode .remove-tag,
@@ -1323,16 +1324,24 @@ button.full-w {
 
 .mode-toggle-btn {
     font-size: 13px;
-    padding: 4px 10px;
+    font-weight: 600;
+    padding: 4px 12px;
     border-radius: 12px;
-    background: var(--bg-warm);
-    border: 1px solid var(--border);
+    background: var(--card);
+    border: 1.5px solid var(--border-dark, #ccc);
+    color: var(--text);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
+}
+
+.mode-toggle-btn:hover {
+    background: var(--bg-warm);
+    border-color: var(--accent);
 }
 
 .mode-toggle-btn.active {
     background: var(--accent);
     color: white;
     border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
