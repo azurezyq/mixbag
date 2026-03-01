@@ -19,6 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryModal = $('category-modal'), categoryOptions = $('category-options'),
         createModal = $('create-modal');
 
+    // Service Worker Registration for PWA Installability
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('ServiceWorker registered with scope:', reg.scope);
+        }).catch(err => {
+            console.error('ServiceWorker registration failed:', err);
+        });
+    }
+
     let currentUser = null, userBags = [], selectedBags = new Set(),
         showOnlyStarred = false, selectedTag = null, searchQuery = '';
     let movingBag = null, movingItem = null, movingCallback = null;
