@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentUser = null, userBags = [], selectedBags = new Set(),
         showOnlyStarred = false, selectedTag = null, searchQuery = '';
+    let isEditMode = true;
     let movingBag = null, movingItem = null, movingCallback = null;
     let currentOpenBagName = null;
 
@@ -364,10 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h2 id="bag-title" title="点击重命名">${bag.name}</h2>
                     <div class="view-header-actions">
                         <span id="progress-text">0/0</span>
+                        <button class="mode-toggle-btn ${isEditMode ? '' : 'active'}" id="mode-toggle">${isEditMode ? '编辑模式' : '点击模式'}</button>
                         <button class="icon-btn" id="rename-btn" title="重命名"><i data-lucide="pencil"></i></button>
                         <button class="icon-btn dup-btn" id="dup-detail" title="复制"><i data-lucide="copy"></i></button>
                     </div>
                 </div>
+                <div class="${isEditMode ? '' : 'check-mode'}">
                 <div class="progress-bar-container"><div id="progress-bar" class="progress-bar"></div></div>
                 <div class="tag-manage">${(bag.tags || []).map(t => `<span class="badge">${t}<span class="remove-tag" data-tag="${t}">×</span></span>`).join('')}</div>
                 <div class="tag-add-row"><input id="tag-input" placeholder="添加标签…"><button class="icon-btn" id="tag-add-btn"><i data-lucide="plus"></i></button></div>
@@ -385,6 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="cat-add-bar"><input placeholder="在 ${cat} 中添加…" data-cat="${cat}"><button class="icon-btn cat-add-btn" data-cat="${cat}"><i data-lucide="plus"></i></button></div>
                     </div>`).join('')}
+                </div>
                 </div>`;
             lucide.createIcons(); updateProgress(bag); setupEvents();
         };
@@ -392,10 +396,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const setupEvents = () => {
             $('back-btn').onclick = goBack;
             $('dup-detail').onclick = () => duplicateBag(bag);
+            $('mode-toggle').onclick = () => { isEditMode = !isEditMode; render(); };
 
             // Rename
-            $('rename-btn').onclick = () => startRename(bag, render);
-            $('bag-title').onclick = () => startRename(bag, render);
+            $('rename-btn').onclick = () => { if (isEditMode) startRename(bag, render); };
+            $('bag-title').onclick = () => { if (isEditMode) startRename(bag, render); };
 
             // Tags
             document.querySelectorAll('.remove-tag').forEach(el => {
