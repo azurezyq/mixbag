@@ -1304,3 +1304,35 @@ button.full-w {
         max-width: 150px;
     }
 }
+/* CHECK MODE STYLES */
+.check-mode .tag-add-row,
+.check-mode .remove-tag,
+.check-mode .delete-item-btn,
+.check-mode .cat-add-bar,
+.check-mode #rename-btn {
+    display: none !important;
+}
+
+.check-mode #bag-title {
+    cursor: default;
+}
+
+.check-mode #bag-title:hover {
+    background: transparent;
+}
+
+.mode-toggle-btn {
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--bg-warm);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mode-toggle-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
