@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = window.FIREBASE_CONFIG || {};
 const app = initializeApp(firebaseConfig);
@@ -621,18 +621,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    let chatUnsub = null;
-    function loadChatHistory() {
-        if (!currentUser) return; if (chatUnsub) chatUnsub();
-        chatUnsub = onSnapshot(doc(db, "ai_chats", currentUser.uid), doc => {
-            if (doc.exists()) {
-                chatHistory = doc.data().messages || [];
-                renderChatHistory();
-            } else {
-                chatHistory = [];
-                renderChatHistory();
-            }
-        });
+    async function loadChatHistory() {
+        if (!currentUser) return;
+        try {
+            const snap = await getDoc(doc(db, "ai_chats", currentUser.uid));
+            chatHistory = snap.exists() ? (snap.data().messages || []) : [];
+        } catch (e) {
+            console.warn("Could not load chat history", e);
+            chatHistory = [];
+        }
+        renderChatHistory();
     }
 
     async function saveChatHistory() {
@@ -667,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (act.type === 'create_list') {
                 await addDoc(collection(db, 'user_checklists'), { userId: currentUser.uid, name: act.name, items: act.items || [], checkedItems: [], isStarred: false, tags: act.tags || [], createdAt: serverTimestamp() });
-                addChatMsg(`✨ 已创建清单 "${act.name}"`, false);
+                renderChatHistory();
             }
             else if (act.type === 'add_items') {
                 const b = getBag(act.list_name);
