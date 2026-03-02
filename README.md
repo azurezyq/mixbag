@@ -22,7 +22,7 @@ Don't reinvent the wheel every time you pack or plan. Define your base sets once
 
 ## 🛠 Tech Stack
 - **Platform**: Google Firebase (Firestore, Auth, Firebase Admin SDK).
-- **Backend API**: Python (Flask).
+- **Backend API**: Node.js (Express).
 - **Frontend**: HTML5, Vanilla CSS, JS (Premium UI).
 - **AI**: Integrated with Vertex AI (Gemini 2.5 Flash) for intelligent list manipulation.
 
@@ -35,24 +35,22 @@ cp .env.example .env
 ```
 Ensure you have:
 - A Google Cloud Service Account JSON key for Firebase Admin access (set `GOOGLE_APPLICATION_CREDENTIALS`).
-- Your Firebase Client Config fields (`FB_API_KEY`, etc.) which are now injected dynamically to avoid commitment to Git.
+- Your Firebase Client Config fields (`FB_API_KEY`, etc.) which are now injected dynamically.
 
 ### 2. Install Dependencies
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+npm install
 ```
 
 ### 3. Seed Firestore (Optional)
-To populate your Firestore with base templates:
+To populate your Firestore with base templates (still using Python for now):
 ```bash
 python seed_firestore.py
 ```
 
 ### 4. Run Locally
 ```bash
-python app.py
+npm start
 ```
 
 ### 5. Deployment

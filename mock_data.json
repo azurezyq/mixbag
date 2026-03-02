@@ -1,0 +1,161 @@
+[
+    {
+        "name": "夏季徒步",
+        "tags": [
+            "户外",
+            "夏季"
+        ],
+        "items": [
+            {
+                "name": "徒步鞋",
+                "category": "服装及鞋类"
+            },
+            {
+                "name": "速干衣",
+                "category": "服装及鞋类"
+            },
+            {
+                "name": "遮阳帽",
+                "category": "服装及鞋类"
+            },
+            {
+                "name": "水壶 (2L)",
+                "category": "补给"
+            },
+            {
+                "name": "能量棒",
+                "category": "补给"
+            },
+            {
+                "name": "防晒霜",
+                "category": "个人护理"
+            },
+            {
+                "name": "急救包",
+                "category": "安全与导航"
+            },
+            {
+                "name": "地图/GPS",
+                "category": "安全与导航"
+            }
+        ]
+    },
+    {
+        "name": "滑雪装备",
+        "tags": [
+            "户外",
+            "冬季"
+        ],
+        "items": [
+            {
+                "name": "滑雪板/单板",
+                "category": "硬件器材"
+            },
+            {
+                "name": "滑雪靴",
+                "category": "硬件器材"
+            },
+            {
+                "name": "滑雪服",
+                "category": "服装"
+            },
+            {
+                "name": "手套",
+                "category": "服装"
+            },
+            {
+                "name": "滑雪袜",
+                "category": "服装"
+            },
+            {
+                "name": "护脸/围脖",
+                "category": "辅助配件"
+            },
+            {
+                "name": "滑雪镜",
+                "category": "辅助配件"
+            },
+            {
+                "name": "头盔",
+                "category": "辅助配件"
+            }
+        ]
+    },
+    {
+        "name": "摄影基础",
+        "tags": [
+            "数码",
+            "生活"
+        ],
+        "items": [
+            {
+                "name": "相机机身",
+                "category": "核心器材"
+            },
+            {
+                "name": "镜头 (24-70mm)",
+                "category": "核心器材"
+            },
+            {
+                "name": "备用电池",
+                "category": "电源与存储"
+            },
+            {
+                "name": "存储卡",
+                "category": "电源与存储"
+            },
+            {
+                "name": "三脚架",
+                "category": "支撑与附件"
+            },
+            {
+                "name": "清洁工具",
+                "category": "支撑与附件"
+            },
+            {
+                "name": "相机包",
+                "category": "支撑与附件"
+            }
+        ]
+    },
+    {
+        "name": "日常超市购物",
+        "tags": [
+            "生活"
+        ],
+        "items": [
+            {
+                "name": "牛奶",
+                "category": "生鲜奶制品"
+            },
+            {
+                "name": "鸡蛋",
+                "category": "生鲜奶制品"
+            },
+            {
+                "name": "面包",
+                "category": "烘焙与主食"
+            },
+            {
+                "name": "大米",
+                "category": "烘焙与主食"
+            },
+            {
+                "name": "新鲜蔬菜",
+                "category": "蔬菜水果"
+            },
+            {
+                "name": "水果",
+                "category": "蔬菜水果"
+            },
+            {
+                "name": "食用油",
+                "category": "粮油副食"
+            },
+            {
+                "name": "洗涤剂",
+                "category": "日化用品"
+            }
+        ]
+    }
+]

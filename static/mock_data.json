@@ -1,0 +1,62 @@
+[
+    {
+        "id": "base-1",
+        "name": "Summer Hiking",
+        "items": [
+            "Water filter",
+            "Trail mix",
+            "Sunscreen",
+            "First aid kit",
+            "Map",
+            "Compass"
+        ],
+        "tags": [
+            "outdoors",
+            "adventure"
+        ]
+    },
+    {
+        "id": "base-2",
+        "name": "Ski Gear (Hard)",
+        "items": [
+            "Skis",
+            "Poles",
+            "Boots",
+            "Helmet",
+            "Goggles"
+        ],
+        "tags": [
+            "winter",
+            "ski"
+        ]
+    },
+    {
+        "id": "base-3",
+        "name": "Ski Gear (Soft)",
+        "items": [
+            "Jacket",
+            "Pants",
+            "Gloves",
+            "Neck gaiter",
+            "Thermal layers"
+        ],
+        "tags": [
+            "winter",
+            "ski"
+        ]
+    },
+    {
+        "id": "base-4",
+        "name": "Daily Grocery",
+        "items": [
+            "Milk",
+            "Eggs",
+            "Bread",
+            "Coffee",
+            "Fruit"
+        ],
+        "tags": [
+            "home"
+        ]
+    }
+]

@@ -1,0 +1,20 @@
+{
+    "name": "mixbag",
+    "version": "1.0.0",
+    "description": "Mixbag - Smart Checklist App",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node --watch server.js"
+    },
+    "dependencies": {
+        "@google-cloud/vertexai": "^1.9.2",
+        "dotenv": "^16.4.7",
+        "ejs": "^3.1.10",
+        "express": "^4.21.2"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

@@ -3,30 +3,6 @@ node_modules/
 .npm/
 .yarn/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
 # Environment Variables
 .env
 .env.local
@@ -34,13 +10,6 @@ MANIFEST
 .env.test
 .env.production
 .env.*
-
-# Virtual Environment
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
 
 # Firebase
 .firebase/
@@ -50,6 +19,9 @@ firestore-debug.log
 
 # Google Cloud
 *.json
+!package.json
+!package-lock.json
+!mock_data.json
 
 # OS files
 .DS_Store
