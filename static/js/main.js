@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = window.FIREBASE_CONFIG || {};
@@ -50,8 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== AUTH =====
-    loginBtn.onclick = () => signInWithPopup(auth, provider);
+    loginBtn.onclick = () => {
+        if (isMobile()) {
+            signInWithRedirect(auth, provider);
+        } else {
+            signInWithPopup(auth, provider);
+        }
+    };
     logoutBtn.onclick = () => signOut(auth);
+
+    // Handle redirect result on page load (for mobile Google Sign-In flow)
+    getRedirectResult(auth).catch(err => console.warn('Redirect result error:', err));
+
     filterStarredBtn.onclick = () => { showOnlyStarred = !showOnlyStarred; filterStarredBtn.classList.toggle('active', showOnlyStarred); renderBags(); };
     listSearch.oninput = e => { searchQuery = e.target.value.toLowerCase(); renderBags(); };
 
