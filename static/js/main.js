@@ -488,10 +488,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== AI CHATBOT =====
     const chatFab = $('chat-fab'), chatPanel = $('chat-panel'), chatClose = $('chat-close'), chatClear = $('chat-clear');
     const chatInput = $('chat-input'), chatSend = $('chat-send'), chatMessages = $('chat-messages');
+    const refreshListsBtn = $('refresh-lists-btn');
 
     chatFab.onclick = () => { chatPanel.classList.remove('hidden'); chatInput.focus(); chatMessages.scrollTop = chatMessages.scrollHeight; };
     chatClose.onclick = () => chatPanel.classList.add('hidden');
     chatClear.onclick = () => { if (confirm('确定要清空所有聊天记录吗？')) clearChatHistory(); };
+
+    refreshListsBtn.onclick = async () => {
+        const icon = refreshListsBtn.querySelector('i');
+        icon.classList.add('spin-anim');
+        await loadUserBags();
+        setTimeout(() => icon.classList.remove('spin-anim'), 600);
+    };
 
     // Handle scroll on focus for mobile keyboard
     chatInput.onfocus = () => {
@@ -579,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveChatHistory();
 
         const bagsCtx = userBags.map(b => ({ name: b.name, tags: b.tags, items: b.items }));
+        // Ensure we use the most up-to-date currentOpenBagName
         const ctx = { bags: bagsCtx, currentBag: currentOpenBagName };
 
         try {
