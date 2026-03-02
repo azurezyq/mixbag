@@ -1163,11 +1163,12 @@ button.full-w {
 
 @media(max-width: 767px) {
     #chat-panel {
+        top: 0;
         bottom: 0;
         right: 0;
         width: 100%;
-        height: 100dvh;
-        max-height: 100dvh;
+        height: auto;
+        max-height: 100%;
         border-radius: 0;
     }
 }

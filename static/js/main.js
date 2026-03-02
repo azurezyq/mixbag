@@ -490,6 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
     chatFab.onclick = () => { chatPanel.classList.remove('hidden'); chatInput.focus(); };
     chatClose.onclick = () => chatPanel.classList.add('hidden');
 
+    // Handle scroll on focus for mobile keyboard
+    chatInput.onfocus = () => {
+        if (isMobile()) {
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 300);
+        }
+    };
+
     // Resizable Chat Panel
     const resizeHandle = $('chat-resize-handle');
     let isResizing = false;
