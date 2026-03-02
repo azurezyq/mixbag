@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mixbag-pwa-v3';
+const CACHE_NAME = 'mixbag-pwa-v4';
 const urlsToCache = [
     '/',
     '/manifest.json',

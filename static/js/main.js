@@ -591,20 +591,16 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.disabled = true;
         chatSend.disabled = true;
 
-        // 1. Add user message to history, render immediately, then save to Firestore
+        // Add user message to local history and show immediately
         const userMsg = { role: 'user', text };
         chatHistory.push(userMsg);
-        renderChatHistory(); // Optimistic render so the message appears instantly
-        saveChatHistory();   // Fire-and-forget save (no need to await before fetching)
+        addChatMsg(text, true); // Directly append to DOM — no full re-render
+        saveChatHistory();      // Save in background
 
         const bagsCtx = userBags.map(b => ({ name: b.name, tags: b.tags, items: b.items }));
-        // Ensure we use the most up-to-date currentOpenBagName
         const ctx = { bags: bagsCtx, currentBag: currentOpenBagName };
 
         try {
-            // 2. Send current history (minus the one we just added maybe?)
-            // Vertex AI sendMessage adds the message to the session.
-            // But we are sending context-prefixed prompt.
             const res = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -615,7 +611,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.reply) {
                 const botMsg = { role: 'model', text: data.reply };
                 chatHistory.push(botMsg);
-                await saveChatHistory();
+                addChatMsg(data.reply, false); // Directly append bot reply
+                saveChatHistory();
             }
 
             if (data.actions && data.actions.length > 0) {
@@ -627,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             chatInput.disabled = false;
             chatSend.disabled = false;
-            chatInput.focus();
+            if (!isMobile()) chatInput.focus(); // Don't re-focus on mobile (causes keyboard/scroll issues)
         }
     }
 
