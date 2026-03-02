@@ -581,10 +581,11 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.disabled = true;
         chatSend.disabled = true;
 
-        // 1. Add user message to history and save to Firestore
+        // 1. Add user message to history, render immediately, then save to Firestore
         const userMsg = { role: 'user', text };
         chatHistory.push(userMsg);
-        await saveChatHistory();
+        renderChatHistory(); // Optimistic render so the message appears instantly
+        saveChatHistory();   // Fire-and-forget save (no need to await before fetching)
 
         const bagsCtx = userBags.map(b => ({ name: b.name, tags: b.tags, items: b.items }));
         // Ensure we use the most up-to-date currentOpenBagName
