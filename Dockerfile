@@ -17,5 +17,8 @@ RUN npm ci --production
 # Copy the rest of the application
 COPY . ./
 
+# Validate EJS syntax before starting the server
+RUN npm run validate-ejs
+
 # Run the web service on container startup.
 CMD ["node", "server.js"]

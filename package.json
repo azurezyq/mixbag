@@ -5,7 +5,10 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
+        "validate-ejs": "node scripts/validate-ejs.js",
+        "prestart": "npm run validate-ejs",
         "start": "node server.js",
+        "predev": "npm run validate-ejs",
         "dev": "node --watch server.js"
     },
     "dependencies": {

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = window.FIREBASE_CONFIG || {};
 const app = initializeApp(firebaseConfig);
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isEditMode = true;
     let movingBag = null, movingItem = null, movingCallback = null;
     let currentOpenBagName = null;
+    let chatHistory = []; // { role: 'user'|'model', text: '...' }
 
     // Settings (stored in localStorage)
     let settings = JSON.parse(localStorage.getItem('mixbag_settings') || '{}');
@@ -62,7 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
             userName.textContent = user.displayName;
             userPhoto.src = user.photoURL;
             await loadUserBags();
-            // Onboarding check: if user has no bags, populate from templates
+            loadChatHistory();
+            // Onboarding check
             setTimeout(async () => {
                 if (userBags.length === 0 && !localStorage.getItem(`onboarded_${user.uid}`)) {
                     console.log("New user onboarding...");
@@ -484,11 +486,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== AI CHATBOT =====
-    const chatFab = $('chat-fab'), chatPanel = $('chat-panel'), chatClose = $('chat-close');
+    const chatFab = $('chat-fab'), chatPanel = $('chat-panel'), chatClose = $('chat-close'), chatClear = $('chat-clear');
     const chatInput = $('chat-input'), chatSend = $('chat-send'), chatMessages = $('chat-messages');
 
-    chatFab.onclick = () => { chatPanel.classList.remove('hidden'); chatInput.focus(); };
+    chatFab.onclick = () => { chatPanel.classList.remove('hidden'); chatInput.focus(); chatMessages.scrollTop = chatMessages.scrollHeight; };
     chatClose.onclick = () => chatPanel.classList.add('hidden');
+    chatClear.onclick = () => { if (confirm('确定要清空所有聊天记录吗？')) clearChatHistory(); };
 
     // Handle scroll on focus for mobile keyboard
     chatInput.onfocus = () => {
@@ -566,23 +569,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return;
         if (!currentUser) { alert('请先登录才能使用 AI'); return; }
 
-        addChatMsg(text, true);
         chatInput.value = '';
         chatInput.disabled = true;
         chatSend.disabled = true;
+
+        // 1. Add user message to history and save to Firestore
+        const userMsg = { role: 'user', text };
+        chatHistory.push(userMsg);
+        await saveChatHistory();
 
         const bagsCtx = userBags.map(b => ({ name: b.name, tags: b.tags, items: b.items }));
         const ctx = { bags: bagsCtx, currentBag: currentOpenBagName };
 
         try {
+            // 2. Send current history (minus the one we just added maybe?)
+            // Vertex AI sendMessage adds the message to the session.
+            // But we are sending context-prefixed prompt.
             const res = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text, context: ctx })
+                body: JSON.stringify({ message: text, context: ctx, history: chatHistory.slice(0, -1) })
             });
             const data = await res.json();
 
-            if (data.reply) addChatMsg(data.reply, false);
+            if (data.reply) {
+                const botMsg = { role: 'model', text: data.reply };
+                chatHistory.push(botMsg);
+                await saveChatHistory();
+            }
+
             if (data.actions && data.actions.length > 0) {
                 for (let act of data.actions) await executeAction(act);
             }
@@ -594,6 +609,45 @@ document.addEventListener('DOMContentLoaded', () => {
             chatSend.disabled = false;
             chatInput.focus();
         }
+    }
+
+    let chatUnsub = null;
+    function loadChatHistory() {
+        if (!currentUser) return; if (chatUnsub) chatUnsub();
+        chatUnsub = onSnapshot(doc(db, "ai_chats", currentUser.uid), doc => {
+            if (doc.exists()) {
+                chatHistory = doc.data().messages || [];
+                renderChatHistory();
+            } else {
+                chatHistory = [];
+                renderChatHistory();
+            }
+        });
+    }
+
+    async function saveChatHistory() {
+        if (!currentUser) return;
+        try {
+            await setDoc(doc(db, "ai_chats", currentUser.uid), { messages: chatHistory });
+        } catch (e) { console.error("Save chat error", e); }
+    }
+
+    async function clearChatHistory() {
+        chatHistory = [];
+        await saveChatHistory();
+    }
+
+    function renderChatHistory() {
+        chatMessages.innerHTML = `
+            <div class="chat-msg bot"><span>你好！我是 Mixbag AI 助手 ✨<br><br>试试说：<br>• 「帮我创建一个露营装备清单」<br>• 「把防晒霜加到夏季徒步里」<br>• 「给购物清单加10个水果」</span></div>
+        `;
+        chatHistory.forEach(msg => {
+            const el = document.createElement('div');
+            el.className = `chat-msg ${msg.role === 'user' ? 'user' : 'bot'}`;
+            el.innerHTML = `<span>${msg.text.replace(/\n/g, '<br>')}</span>`;
+            chatMessages.appendChild(el);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     chatSend.onclick = sendChatMsg;
     chatInput.onkeypress = e => { if (e.key === 'Enter') sendChatMsg(); };

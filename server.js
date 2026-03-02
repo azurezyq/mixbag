@@ -110,7 +110,7 @@ app.post('/api/ai/suggest', async (req, res) => {
 
 // AI chat endpoint
 app.post('/api/ai/chat', async (req, res) => {
-    const { message = '', context = {} } = req.body;
+    const { message = '', context = {}, history = [] } = req.body;
     const bagsInfo = context.bags || [];
     const currentBag = context.currentBag || null;
 
@@ -134,11 +134,20 @@ app.post('/api/ai/chat', async (req, res) => {
         contextStr += `\n用户当前打开的清单：${currentBag}\n`;
     }
 
-    const prompt = `${contextStr}\n用户消息：${message}`;
+    // Prepend context to the latest message to ensure the model has up-to-date info
+    const fullPrompt = `${contextStr}\n用户消息：${message}`;
 
     try {
         const { chatModel } = getModels();
-        const result = await chatModel.generateContent(prompt);
+
+        // Convert incoming history to the format expected by startChat
+        const formattedHistory = history.map(h => ({
+            role: h.role,
+            parts: [{ text: h.text }]
+        }));
+
+        const chatSession = chatModel.startChat({ history: formattedHistory });
+        const result = await chatSession.sendMessage(fullPrompt);
         let text = result.response.candidates[0].content.parts[0].text.trim();
 
         // Strip markdown code blocks if present
