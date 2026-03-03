@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mixbag-pwa-v5';
+const CACHE_NAME = 'mixbag-pwa-v6';
 const urlsToCache = [
     '/',
     '/manifest.json',
@@ -22,7 +22,12 @@ self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(keys =>
             Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-        ).then(() => self.clients.claim()) // Take control of all open tabs
+        ).then(() => self.clients.claim()).then(() => {
+            // Notify all open clients that a new SW has taken over
+            self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+                clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
+            });
+        })
     );
 });
 
