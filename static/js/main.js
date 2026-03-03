@@ -251,11 +251,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== LONG PRESS =====
     function setupLongPress(el, bag, itemName, cb) {
         let timer;
-        const start = () => { el.classList.add('long-pressing'); timer = setTimeout(() => { el.classList.remove('long-pressing'); openCategoryModal(bag, itemName, cb); }, 600); };
+        const start = () => { el.classList.add('long-pressing'); timer = setTimeout(() => { el.classList.remove('long-pressing'); openItemActionMenu(bag, itemName, cb); }, 600); };
         const cancel = () => { el.classList.remove('long-pressing'); clearTimeout(timer); };
         el.addEventListener('touchstart', start, { passive: true });
         el.addEventListener('touchend', cancel); el.addEventListener('touchmove', cancel);
         el.addEventListener('mousedown', start); el.addEventListener('mouseup', cancel); el.addEventListener('mouseleave', cancel);
+    }
+
+    function openItemActionMenu(bag, name, cb) {
+        const item = bag.items.find(i => (typeof i === 'string' ? i : i.name) === name);
+        const menu = $('item-action-menu');
+        $('item-action-name').textContent = name;
+        const hasRecurring = item && item.recurring;
+        $('action-set-recurring').style.display = hasRecurring ? 'none' : 'flex';
+        $('action-remove-recurring').style.display = hasRecurring ? 'flex' : 'none';
+
+        const close = () => menu.classList.add('hidden');
+        menu.classList.remove('hidden');
+        lucide.createIcons();
+
+        $('action-move-cat').onclick = () => { close(); openCategoryModal(bag, name, cb); };
+        $('action-set-recurring').onclick = () => { close(); openRecurringModal(bag, name, null, cb); };
+        $('action-remove-recurring').onclick = () => { close(); openRecurringModal(bag, name, item.recurring, cb); };
+        $('action-delete-item').onclick = () => { close(); deleteItem(bag, name, cb); };
+        $('action-menu-cancel').onclick = close;
+        menu.onclick = e => { if (e.target === menu) close(); };
     }
 
     function openCategoryModal(bag, name, cb) {
@@ -276,6 +296,114 @@ document.addEventListener('DOMContentLoaded', () => {
         if (movingCallback) movingCallback();
         if (currentUser && userBags.some(b => b.id === movingBag.id)) await updateDoc(doc(db, "user_checklists", movingBag.id), { items: movingBag.items });
     }
+
+    // ===== RECURRING =====
+    function openRecurringModal(bag, name, existingRecurring, cb) {
+        const modal = $('recurring-modal');
+        const periodInput = $('recurring-period-input');
+        const timesInput = $('recurring-times-input');
+        const lastDoneInput = $('recurring-lastdone-input');
+        const removeBtn = $('recurring-remove');
+
+        const today = new Date().toISOString().split('T')[0];
+        if (existingRecurring) {
+            periodInput.value = existingRecurring.period || 7;
+            timesInput.value = existingRecurring.repeatTimes || 1;
+            lastDoneInput.value = existingRecurring.lastDone || today;
+            removeBtn.style.display = 'inline-block';
+        } else {
+            periodInput.value = 7;
+            timesInput.value = 1;
+            lastDoneInput.value = today;
+            removeBtn.style.display = 'none';
+        }
+
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.days) === parseInt(periodInput.value));
+            btn.onclick = () => {
+                periodInput.value = btn.dataset.days;
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+        });
+        periodInput.oninput = () => {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.days) === parseInt(periodInput.value)));
+        };
+
+        modal.classList.remove('hidden');
+        $('recurring-cancel').onclick = () => modal.classList.add('hidden');
+
+        removeBtn.onclick = async () => {
+            const it = bag.items.find(i => (typeof i === 'string' ? i : i.name) === name);
+            if (it && typeof it === 'object') delete it.recurring;
+            modal.classList.add('hidden');
+            if (currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { items: bag.items });
+            cb();
+        };
+
+        $('recurring-save').onclick = async () => {
+            const period = parseInt(periodInput.value) || 7;
+            const repeatTimes = parseInt(timesInput.value) || 1;
+            const lastDone = lastDoneInput.value || today;
+            const it = bag.items.find(i => (typeof i === 'string' ? i : i.name) === name);
+            if (it) {
+                if (typeof it === 'string') {
+                    const idx = bag.items.indexOf(it);
+                    bag.items[idx] = { name: it, category: '未分类', recurring: { period, repeatTimes, lastDone, completions: [] } };
+                } else {
+                    it.recurring = { period, repeatTimes, lastDone, completions: (it.recurring && it.recurring.completions) || [] };
+                }
+            }
+            modal.classList.add('hidden');
+            if (currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { items: bag.items });
+            cb();
+        };
+    }
+
+    function getRecurringStatus(item) {
+        if (!item || !item.recurring) return null;
+        const { period, repeatTimes = 1, completions = [], lastDone } = item.recurring;
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        // Count completions within the current period window
+        const windowStart = new Date(now);
+        windowStart.setDate(windowStart.getDate() - period + 1);
+        const windowStartStr = windowStart.toISOString().split('T')[0];
+        const doneThisPeriod = completions.filter(d => d >= windowStartStr && d <= todayStr).length;
+        const remaining = repeatTimes - doneThisPeriod;
+        const lastDoneDate = completions.length > 0 ? completions[completions.length - 1] : (lastDone || null);
+
+        // Calculate days since last done
+        let daysSinceLastDone = null;
+        if (lastDoneDate) {
+            const diff = now - new Date(lastDoneDate);
+            daysSinceLastDone = Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        if (remaining <= 0) return { state: 'done', doneThisPeriod, repeatTimes, daysSinceLastDone, lastDoneDate };
+        if (daysSinceLastDone !== null && daysSinceLastDone >= period) return { state: 'overdue', doneThisPeriod, remaining, repeatTimes, daysSinceLastDone, lastDoneDate };
+        if (daysSinceLastDone !== null && daysSinceLastDone >= period - 1) return { state: 'due-today', doneThisPeriod, remaining, repeatTimes, daysSinceLastDone, lastDoneDate };
+        return { state: 'pending', doneThisPeriod, remaining, repeatTimes, daysSinceLastDone, lastDoneDate };
+    }
+
+    function getStatusLabel(status) {
+        if (!status) return '';
+        const { state, remaining, repeatTimes, daysSinceLastDone, lastDoneDate, doneThisPeriod } = status;
+        const timesStr = repeatTimes > 1 ? `（${doneThisPeriod}/${repeatTimes}次）` : '';
+        if (state === 'done') {
+            if (daysSinceLastDone === 0) return `<span class="recurring-status done">✓ 今天已完成${timesStr}</span>`;
+            return `<span class="recurring-status done">✓ ${daysSinceLastDone}天前完成${timesStr}</span>`;
+        }
+        if (state === 'overdue') return `<span class="recurring-status overdue">⚠ 已逾期 ${daysSinceLastDone} 天${timesStr}</span>`;
+        if (state === 'due-today') return `<span class="recurring-status due-today">· 今日应完成${timesStr}</span>`;
+        if (state === 'pending') {
+            if (daysSinceLastDone === null) return `<span class="recurring-status">🔄 周期任务（未记录完成）</span>`;
+            return `<span class="recurring-status">🔄 ${daysSinceLastDone}天前完成${timesStr}</span>`;
+        }
+        return '';
+    }
+
 
     // ===== MIXER =====
     function startMixing() {
@@ -391,9 +519,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="category-header"><span>${cat}</span><span class="badge">${g[cat].length}</span></div>
                         <div class="category-items">${g[cat].map(it => {
                 const ck = (bag.checkedItems || []).includes(it.name);
-                return `<div class="check-item ${ck ? 'checked' : ''}" data-name="${it.name}">
+                const isRecurring = it.recurring;
+                const recurStatus = getRecurringStatus(it);
+                const stateClass = recurStatus ? `recurring-${recurStatus.state}` : '';
+                const statusLabel = getStatusLabel(recurStatus);
+                const recurBadge = isRecurring ? `<span class="recurring-badge">🔄</span>` : '';
+                return `<div class="check-item ${ck ? 'checked' : ''} ${stateClass}" data-name="${it.name}">
                                 <div class="check-box"><i data-lucide="${ck ? 'check' : 'circle'}"></i></div>
-                                <span class="item-text">${it.name}</span>
+                                <span class="item-text">${it.name}${recurBadge}</span>
+                                ${statusLabel}
                                 <button class="icon-btn delete-item-btn"><i data-lucide="trash-2"></i></button>
                             </div>`;
             }).join('')}
@@ -456,12 +590,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function toggleItem(bag, name, cb) {
-        if (!bag.checkedItems) bag.checkedItems = [];
-        const i = bag.checkedItems.indexOf(name);
-        if (i > -1) bag.checkedItems.splice(i, 1); else bag.checkedItems.push(name);
-        cb();
-        if (currentUser && userBags.some(b => b.id === bag.id)) await updateDoc(doc(db, "user_checklists", bag.id), { checkedItems: bag.checkedItems });
+        const item = bag.items.find(i => (typeof i === 'string' ? i : i.name) === name);
+        if (item && item.recurring) {
+            // Recurring item: record today's date as a completion
+            const today = new Date().toISOString().split('T')[0];
+            if (!item.recurring.completions) item.recurring.completions = [];
+            const status = getRecurringStatus(item);
+            if (status && status.state === 'done') {
+                // Already done this period — remove last completion (undo)
+                item.recurring.completions = item.recurring.completions.filter(d => d !== today);
+            } else {
+                // Record a new completion
+                item.recurring.completions.push(today);
+                // Keep only the last 90 days of completions to avoid unbounded growth
+                item.recurring.completions = item.recurring.completions.sort().slice(-90);
+            }
+            item.recurring.lastDone = today;
+            cb();
+            if (currentUser) await updateDoc(doc(db, "user_checklists", bag.id), { items: bag.items });
+        } else {
+            // Normal item: toggle checked state
+            if (!bag.checkedItems) bag.checkedItems = [];
+            const i = bag.checkedItems.indexOf(name);
+            if (i > -1) bag.checkedItems.splice(i, 1); else bag.checkedItems.push(name);
+            cb();
+            if (currentUser && userBags.some(b => b.id === bag.id)) await updateDoc(doc(db, "user_checklists", bag.id), { checkedItems: bag.checkedItems });
+        }
     }
+
 
     async function deleteItem(bag, name, cb) {
         bag.items = bag.items.filter(i => (typeof i === 'string' ? i : i.name) !== name);

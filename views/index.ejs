@@ -84,6 +84,53 @@
             </div>
         </div>
     </div>
+    <!-- Item long-press action menu -->
+    <div id="item-action-menu" class="modal-overlay hidden">
+        <div class="modal-card item-action-card">
+            <div class="item-action-title" id="item-action-name"></div>
+            <button class="item-action-btn" id="action-move-cat"><i data-lucide="folder-output"></i> 移动分类</button>
+            <button class="item-action-btn" id="action-set-recurring"><i data-lucide="repeat"></i> 设为周期任务</button>
+            <button class="item-action-btn" id="action-remove-recurring" style="display:none"><i
+                    data-lucide="repeat-2"></i> 修改/取消周期</button>
+            <button class="item-action-btn danger" id="action-delete-item"><i data-lucide="trash-2"></i> 删除</button>
+            <button class="item-action-btn secondary" id="action-menu-cancel">取消</button>
+        </div>
+    </div>
+    <!-- Recurring setup modal -->
+    <div id="recurring-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>设置周期任务</h3>
+            <div class="recurring-section-label">周期频率（每隔几天）</div>
+            <div class="recurring-presets">
+                <button class="preset-btn" data-days="1">每天</button>
+                <button class="preset-btn" data-days="3">每3天</button>
+                <button class="preset-btn active" data-days="7">每周</button>
+                <button class="preset-btn" data-days="14">每两周</button>
+                <button class="preset-btn" data-days="30">每月</button>
+            </div>
+            <div class="recurring-custom-row">
+                <span>自定义：每</span>
+                <input type="number" id="recurring-period-input" min="1" max="365" value="7"
+                    class="recurring-number-input">
+                <span>天</span>
+            </div>
+            <div class="recurring-section-label" style="margin-top:12px">每周期需完成次数</div>
+            <div class="recurring-custom-row">
+                <span>需完成</span>
+                <input type="number" id="recurring-times-input" min="1" max="99" value="1"
+                    class="recurring-number-input">
+                <span>次</span>
+            </div>
+            <div class="recurring-section-label" style="margin-top:12px">上次完成时间</div>
+            <input type="date" id="recurring-lastdone-input" class="modal-full-input">
+            <div class="modal-actions" style="margin-top:16px">
+                <button id="recurring-cancel" class="secondary">取消</button>
+                <button id="recurring-remove" class="secondary danger-text" style="display:none">取消周期</button>
+                <button id="recurring-save">保存</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AI Chat -->
     <button id="chat-fab"><i data-lucide="bot"></i></button>
     <div id="chat-panel" class="hidden">

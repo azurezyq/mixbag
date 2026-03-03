@@ -1354,3 +1354,115 @@ button.full-w {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* ===== RECURRING ITEMS ===== */
+.item-action-card {
+    padding: 8px 0;
+    min-width: 240px;
+}
+.item-action-title {
+    font-weight: 600;
+    padding: 8px 20px 12px;
+    font-size: 14px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+}
+.item-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+.item-action-btn:hover { background: var(--card-hover); }
+.item-action-btn.danger { color: #e74c3c; }
+.item-action-btn.secondary { color: var(--text-muted); font-size: 14px; }
+.danger-text { color: #e74c3c !important; }
+.recurring-section-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    margin-top: 4px;
+}
+.recurring-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.preset-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+}
+.preset-btn.active, .preset-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+.recurring-custom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text);
+}
+.recurring-number-input {
+    width: 60px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Recurring item display */
+.check-item.recurring-overdue {
+    border-left: 3px solid #e67e22;
+    background: rgba(230, 126, 34, 0.07);
+}
+.check-item.recurring-due-today {
+    border-left: 3px solid #f1c40f;
+    background: rgba(241, 196, 15, 0.07);
+}
+.check-item.recurring-done {
+    border-left: 3px solid #27ae60;
+}
+.recurring-badge {
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: var(--border);
+    color: var(--text-muted);
+    margin-left: 6px;
+    vertical-align: middle;
+}
+.recurring-status {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: block;
+}
+.recurring-status.overdue { color: #e67e22; font-weight: 600; }
+.recurring-status.due-today { color: #f39c12; }
+.recurring-status.done { color: #27ae60; }
