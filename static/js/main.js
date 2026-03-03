@@ -271,11 +271,37 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
 
         $('action-move-cat').onclick = () => { close(); openCategoryModal(bag, name, cb); };
+        $('action-rename-item').onclick = () => { close(); renameItem(bag, name, cb); };
         $('action-set-recurring').onclick = () => { close(); openRecurringModal(bag, name, null, cb); };
         $('action-remove-recurring').onclick = () => { close(); openRecurringModal(bag, name, item.recurring, cb); };
         $('action-delete-item').onclick = () => { close(); deleteItem(bag, name, cb); };
         $('action-menu-cancel').onclick = close;
         menu.onclick = e => { if (e.target === menu) close(); };
+    }
+
+    async function renameItem(bag, oldName, cb) {
+        const newName = prompt(`重命名「${oldName}」`, oldName);
+        if (!newName || !newName.trim() || newName.trim() === oldName) return;
+        const trimmed = newName.trim();
+        // Avoid duplicates
+        if (bag.items.some(i => (typeof i === 'string' ? i : i.name) === trimmed)) {
+            alert(`「${trimmed}」已存在于该清单中。`); return;
+        }
+        const it = bag.items.find(i => (typeof i === 'string' ? i : i.name) === oldName);
+        if (it) {
+            if (typeof it === 'string') {
+                bag.items[bag.items.indexOf(it)] = trimmed;
+            } else {
+                it.name = trimmed;
+            }
+        }
+        // Also update checkedItems references
+        if (bag.checkedItems) {
+            const idx = bag.checkedItems.indexOf(oldName);
+            if (idx > -1) bag.checkedItems[idx] = trimmed;
+        }
+        cb();
+        if (currentUser) await updateDoc(doc(db, 'user_checklists', bag.id), { items: bag.items, checkedItems: bag.checkedItems || [] });
     }
 
     function openCategoryModal(bag, name, cb) {
