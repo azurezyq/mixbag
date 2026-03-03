@@ -1,0 +1,51 @@
+{
+    "firestore": [
+        {
+            "database": "(default)",
+            "rules": "firestore.rules"
+        },
+        {
+            "database": "fairy",
+            "rules": "firestore.rules"
+        }
+    ],
+    "hosting": {
+        "site": "mixbag-codingstory",
+        "public": "static",
+        "cleanUrls": true,
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "headers": [
+            {
+                "source": "**/*.@(js|css)",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "no-cache, must-revalidate"
+                    }
+                ]
+            },
+            {
+                "source": "sw.js",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "no-cache, must-revalidate"
+                    }
+                ]
+            }
+        ],
+        "rewrites": [
+            {
+                "source": "**",
+                "run": {
+                    "serviceId": "mixbag-service",
+                    "region": "us-central1"
+                }
+            }
+        ]
+    }
+}

@@ -22,6 +22,7 @@ firestore-debug.log
 !package.json
 !package-lock.json
 !mock_data.json
+!firebase.json
 
 # OS files
 .DS_Store
