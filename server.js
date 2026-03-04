@@ -33,6 +33,7 @@ app.get('/app-config.js', (req, res) => {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+
 // --- Vertex AI setup (lazy-initialized on first AI request) ---
 const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
 const LOCATION = 'us-central1';

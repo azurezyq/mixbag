@@ -50,13 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== AUTH =====
-    loginBtn.onclick = () => {
-        if (isMobile()) {
+    loginBtn.onclick = async () => {
+        try {
+            // Prefer Popup even on mobile, as it's more reliable for cross-origin auth.
+            // Redirection often fails due to 3rd-party cookie restrictions on Chrome Android.
+            await signInWithPopup(auth, provider);
+        } catch (err) {
+            console.warn('Popup login failed/blocked, falling back to redirect:', err);
+            // Fallback to Redirect if Popup is blocked or fails
             signInWithRedirect(auth, provider);
-        } else {
-            signInWithPopup(auth, provider);
         }
     };
+
     logoutBtn.onclick = () => signOut(auth);
 
     // Handle redirect result on page load (for mobile Google Sign-In flow)
