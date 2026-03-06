@@ -6,7 +6,7 @@
         },
         {
             "database": "fairy",
-            "rules": "firestore.rules"
+            "rules": "firestore_fairy.rules"
         }
     ],
     "hosting": {

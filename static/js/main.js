@@ -81,8 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadChatHistory();
             // Onboarding check
             setTimeout(async () => {
-                if (userBags.length === 0 && !localStorage.getItem(`onboarded_${user.uid}`)) {
-                    console.log("New user onboarding...");
+                const alreadyOnboarded = localStorage.getItem(`onboarded_${user.uid}`);
+                if (userBags.length === 0 && !alreadyOnboarded) {
                     try {
                         const s = await getDocs(collection(db, 'checklists'));
                         const templates = s.docs.map(d => d.data());
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem(`onboarded_${user.uid}`, 'true');
                     } catch (e) { console.error("Onboarding failed", e); }
                 }
-            }, 1000); // Give a moment for snapshot to fire
+            }, 2000); // Increased timeout to ensure snapshot results are processed
         }
         else { currentUser = null; userProfile.classList.add('hidden'); loginBtn.classList.remove('hidden'); userBags = []; renderBags(); }
     });
@@ -679,7 +679,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadUserBags() {
         if (!currentUser) return; if (unsub) unsub();
         const q = query(collection(db, "user_checklists"), where("userId", "==", currentUser.uid));
-        unsub = onSnapshot(q, snap => { userBags = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderBags(); renderTagBar(); });
+        unsub = onSnapshot(q, snap => {
+            userBags = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderBags();
+            renderTagBar();
+        }, err => {
+            if (err.code === 'permission-denied') {
+                console.error("Permission denied for user_checklists collection. Ensure firestore.rules reflect databaseId: 'fairy'.");
+                alert("您没有访问该数据库的权限。请联系管理员或检查安全规则。");
+            } else {
+                console.error("Firestore snapshot error:", err);
+            }
+        });
     }
 
     // ===== AI CHATBOT =====
@@ -821,7 +832,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const snap = await getDoc(doc(db, "ai_chats", currentUser.uid));
             chatHistory = snap.exists() ? (snap.data().messages || []) : [];
         } catch (e) {
-            console.warn("Could not load chat history", e);
+            if (e.code === 'permission-denied') {
+                console.error("Permission denied for ai_chats collection. Check firestore.rules.");
+            } else {
+                console.warn("Could not load chat history", e);
+            }
             chatHistory = [];
         }
         renderChatHistory();

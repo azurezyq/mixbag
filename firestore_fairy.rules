@@ -1,5 +1,6 @@
 rules_version = '2';
 
+// Fairy Database Rules v1.1 (Troubleshooting)
 service cloud.firestore {
   match /databases/{database}/documents {
     // Base templates: Anyone can read
@@ -8,9 +9,11 @@ service cloud.firestore {
       allow write: if false;
     }
     
-    // User lists: Temporarily allow all authenticated users to read/write for troubleshooting
+    // User lists: Only the owner can read/write
     match /user_checklists/{list} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // AI Chats: Only the owner
